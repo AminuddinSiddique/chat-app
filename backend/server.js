@@ -1,6 +1,8 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import authRoutes from './routes/auth.routes.js'
+import cookieParser from 'cookie-parser';
+import messagesRoute from './routes/message.routes.js'
 import connectToMongo from './db/connectToMongoDB.js';
 
 const app = express();
@@ -18,9 +20,11 @@ app.get("/",(req,res)=>{res.send('Hello World'); })
 // })
 
 app.use(express.json());
+app.use(cookieParser());
 // console.log(express.json());
 
 app.use("/api/auth",authRoutes)
+app.use("/api/messages",messagesRoute)
 
 
 app.listen(PORT, () => {
