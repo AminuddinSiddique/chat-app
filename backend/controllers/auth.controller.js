@@ -27,7 +27,7 @@ export const signup = async (req, res) => {
       username,
       password: hashed_password,
       gender,
-      profilePic: gender == "Male" ? boyProfilePic : girlProfilePic,
+      profilePic: gender == "male" ? boyProfilePic : girlProfilePic,
     });
 
     if (newUser) {
@@ -50,31 +50,27 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    if (username.trim().lenght == 0 || password.trim().lenght == 0) {
-      return res.status(400).json({ error: "empty username or password" });
-    }
+	try {
+		const { username, password } = req.body;
+		const user = await User.findOne({ username });
+		const isPasswordCorrect = await bcrypt.compare(password, user?.password || "");
 
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(400).json({ error: "User Not Found" });
-    }
+		if (!user || !isPasswordCorrect) {
+			return res.status(400).json({ error: "Invalid username or password" });
+		}
 
-    const salt = await bcrypt.genSalt(10);
-    const hased_password = await bcrypt.hash(user.password, salt);
-    const isPasswordCorrect = await bcrypt.compare(password, hased_password);
-    if (isPasswordCorrect) {
-      return res.status(400).json({ error: "Invalid Credentials" });
-    }
+		generateTokenAndSetCookie(user._id, res);
 
-    generateTokenAndSetCookie(user._id, res);
-
-    return res.status(200).json({ message: "logged in" });
-  } catch (error) {
-    console.log("Error in login controller", error.message);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+		res.status(200).json({
+			_id: user._id,
+			fullName: user.fullname,
+			username: user.username,
+			profilePic: user.profilePic,
+		});
+	} catch (error) {
+		console.log("Error in login controller", error.message);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
 };
 
 export const logout = (req, res) => {
